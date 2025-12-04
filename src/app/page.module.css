@@ -1,0 +1,164 @@
+/* -------------------------------------- */
+/* 4. Estilos Generales y Video de Fondo */
+/* -------------------------------------- */
+.homeContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Evita todo tipo de scroll */
+}
+
+/* Video de Fondo (Asegura que cubra todo) */
+.heroVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%; 
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: 1; 
+  object-fit: cover; 
+  filter: brightness(0.7);
+}
+
+/* -------------------------------------- */
+/* 1. Estilos de Distribución (Mobile First) */
+/* -------------------------------------- */
+.contentOverlay {
+  position: relative; /* CRÍTICO: Referencia para la pestaña absoluta */
+  z-index: 2; 
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
+
+  padding: 20px 20px 40px 20px; /* Padding base */
+
+  background: linear-gradient(
+    180deg, 
+    rgba(0,0,0,0.8) 0%, 
+    rgba(0,0,0,0.1) 40%, 
+    rgba(0,0,0,0.8) 100% 
+  );
+}
+
+/* Header y emptyPlaceholder eliminados */
+
+
+/* -------------------------------------- */
+/* 3. Logo Centrado y Grande */
+/* -------------------------------------- */
+.centeredLogoArea {
+  width: 100%;
+  text-align: center; 
+  margin-top: 50px; 
+  margin-bottom: 20px; 
+}
+
+.centeredLogoArea img {
+    width: 180px; 
+    height: auto;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+}
+
+
+/* Área inferior: Leyendas y Botón */
+.ctaArea {
+  margin-top: auto; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  padding: 0 10px;
+  max-width: 500px; 
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* -------------------------------------- */
+/* 2. Leyendas (Tamaño corregido) */
+/* -------------------------------------- */
+.legend1 {
+  font-size: 1.1rem; 
+  text-align: center;
+  color: #ccc;
+  font-style: italic;
+}
+
+.legend2 {
+  font-size: 0.8rem;
+  text-align: center;
+  color: #999;
+  margin-top: -10px; 
+}
+
+/* -------------------------------------- */
+/* 1. Pestaña de Productos (El estilo real de la pestaña está en ProductsTab.module.css) */
+/* -------------------------------------- */
+.productsTab {
+    /* Ya no se usa para posicionamiento, solo como marcador */
+    align-self: flex-start;
+}
+
+
+/* -------------------------------------- */
+/* 2. Botón CTA y Animación */
+/* -------------------------------------- */
+.ctaButton {
+  background-color: #a52a2a; 
+  color: #fff;
+  text-decoration: none;
+  padding: 15px 40px;
+  border-radius: 50px; 
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+
+  /* Animación del pulso (keyframe) */
+  animation: pulse 1.5s infinite;
+}
+
+.ctaButton:hover {
+  background-color: #8b2323; 
+  transform: scale(1.05); 
+  animation: none; 
+}
+
+/* Definición de la animación de pulso */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(165, 42, 42, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(165, 42, 42, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(165, 42, 42, 0);
+  }
+}
+
+/* -------------------------------------- */
+/* Estilos para Pantallas de Escritorio (Desktop) */
+/* -------------------------------------- */
+@media (min-width: 768px) {
+    .centeredLogoArea {
+         margin-top: 80px;
+    }
+    .centeredLogoArea img {
+        width: 300px; 
+    }
+    .ctaArea {
+        gap: 30px;
+        margin-bottom: 80px;
+    }
+    .legend1 {
+        font-size: 1.3rem;
+    }
+    .contentOverlay {
+        padding: 40px; 
+    }
+}

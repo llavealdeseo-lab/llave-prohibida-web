@@ -1,0 +1,154 @@
+/* -------------------------------------- */
+/* 1. Estilos del Contenedor Principal */
+/* -------------------------------------- */
+.qrContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Evita todo tipo de scroll */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
+
+/* Video de Fondo (Asegura que cubra todo) */
+.heroVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%; 
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: 1; 
+  object-fit: cover; 
+  filter: brightness(0.6); /* Oscurecido para el modo juego */
+}
+
+/* Capa de Contenido */
+.contentOverlay {
+  position: relative;
+  z-index: 2; 
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between; 
+
+  padding: 20px; 
+
+  background: linear-gradient(
+    180deg, 
+    rgba(0,0,0,0.8) 0%, 
+    rgba(0,0,0,0.1) 40%, 
+    rgba(0,0,0,0.8) 100% 
+  );
+}
+
+/* -------------------------------------- */
+/* 2. Logo (Arriba a la derecha) */
+/* -------------------------------------- */
+.logoArea {
+    align-self: flex-end; /* Alinea el logo a la derecha del contenedor */
+    margin-top: 10px;
+    margin-right: 10px;
+}
+.logoArea img {
+    width: 100px; /* Tamaño del logo en móvil */
+    height: auto;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+}
+
+
+/* -------------------------------------- */
+/* 3. Área de Texto y Botón (Centrada) */
+/* -------------------------------------- */
+.ctaArea {
+    flex-grow: 1; /* Permite que ocupe el espacio central */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra verticalmente */
+    align-items: center;
+    gap: 30px;
+    text-align: center;
+    max-width: 600px;
+    padding: 0 10px;
+}
+
+.ritualName {
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.legend {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #fff;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+/* -------------------------------------- */
+/* 4. Botón CTA y Animación */
+/* -------------------------------------- */
+.ctaButton {
+  color: #000;
+  text-decoration: none;
+  padding: 18px 45px;
+  border-radius: 50px; 
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+
+  /* Animación del pulso (keyframe) */
+  animation: pulseButton 1.5s infinite;
+}
+
+.ctaButton:hover {
+  opacity: 0.9;
+  transform: scale(1.02); 
+  animation: none; 
+}
+
+/* Definición de la animación de pulso (usa el color inyectado desde el JS) */
+@keyframes pulseButton {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); 
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* -------------------------------------- */
+/* Estilos para Pantallas de Escritorio (Desktop) */
+/* -------------------------------------- */
+@media (min-width: 768px) {
+    .logoArea {
+        margin-top: 30px;
+        margin-right: 30px;
+    }
+    .logoArea img {
+        width: 150px;
+    }
+    .ritualName {
+        font-size: 2.5rem;
+    }
+    .legend {
+        font-size: 1.3rem;
+    }
+    .ctaButton {
+        font-size: 1.3rem;
+        padding: 20px 50px;
+    }
+}

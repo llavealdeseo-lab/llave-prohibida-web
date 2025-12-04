@@ -1,0 +1,25 @@
+{
+  "categorias": ["tentacion", "pasion", "deseo_prohibido"],
+  "limites": {
+    "tentacion": { "maxUsd": 100 },
+    "pasion": { "maxUsd": 300 },
+    "deseo_prohibido": { "maxUsd": 3000 }
+  },
+  "ejemplosDeseos": {
+    "tentacion": {
+      "regalo": ["Un perfume de hasta USD 100", "Chocolate premium"],
+      "emocional": ["Un beso apasionado en la boca", "Un audio romántico"],
+      "fisico": ["Un abrazo fuerte antes de dormir"]
+    },
+    "pasion": {
+      "regalo": ["Una cena lujosa", "Un día en un spa"],
+      "emocional": ["Dejame ver tus mensajes por un rato"],
+      "fisico": ["Un baile erótico con lencería", "Probar una nueva posición sexual"]
+    },
+    "deseo_prohibido": {
+      "regalo": ["Un iPhone nuevo", "Un viaje a Brasil"],
+      "emocional": ["Que me pidas casamiento", "Salir de viaje con mis amigos sin conflicto"],
+      "fisico": ["Azotame con un látigo", "Hacerlo en un lugar público"]
+    }
+  }
+}

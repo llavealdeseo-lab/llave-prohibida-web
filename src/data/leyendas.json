@@ -1,0 +1,48 @@
+{
+  "home": {
+    "legend1": "No creas que solo estás a punto de comprar un chocolate. Llave Prohibida es una experiencia lúdica y sensual en pareja, que despierta curiosidad, provoca fantasías y abre puertas a deseos que no sabías que tu pareja tenía. ¿Te animas a descubrirlo?",
+    "legend2": "Si ya tienes tu chocolate, solo tienes que escanear el código QR que aparece en la tarjeta."
+  },
+   "products": [
+  {
+    "slug": "tentacion",
+    "name": "Tentación",
+    "tagline": "Despierta la dulzura.",
+    "description": "El ritual de inicio: Una base de cacao suave que se deshace en la boca, con notas de vainilla y almendra. Perfecto para despertar la curiosidad y la dulzura en la pareja.",
+    "price": "30.000",
+    "image": "/mockups/export/desktop/mockup_tentacion_montaje.jpg",
+    "validatorDescription": "El chocolate Tentación es el ritual de inicio, ideal para parejas que buscan despertar la curiosidad y reconquistarse con dulzura.",
+    "validatorInspiration": ["Un beso robado e inesperado", "Una noche de mimos y películas", "Una carta de amor"]
+  },
+  {
+    "slug": "pasion",
+    "name": "Pasión",
+    "tagline": "Sube la temperatura.",
+    "description": "El nivel intermedio: Un chocolate negro intenso (70% cacao) con un toque de chile y canela. Ideal para parejas que buscan subir la temperatura y explorar el lado sensual de la relación.",
+    "price": "45.000",
+    "image": "/mockups/export/desktop/mockup_pasion_montaje.jpg",
+    "validatorDescription": "El chocolate Pasión es para explorar el lado sensual y aumentar la temperatura. Exige valentía para compartir una fantasía que aún no han cumplido.",
+    "validatorInspiration": ["Probar una nueva posición sexual", "Una sesión de masaje erótico", "Compartir una fantasía secreta"]
+  },
+  {
+    "slug": "deseo-prohibido",
+    "name": "Deseo Prohibido",
+    "tagline": "Atrae lo prohibido.",
+    "description": "El ritual más oscuro: Cacao 85% con granos de café tostado y sal marina. Para parejas con un alto nivel de compromiso que se atreven a explorar sus deseos más profundos y secretos.",
+    "price": "60.000",
+    "image": "/mockups/export/desktop/mockup_deseo_montaje.jpg",
+    "validatorDescription": "El Deseo Prohibido es el ritual más oscuro, solo para almas audaces. Permite a las parejas con alto compromiso explorar los límites de su relación.",
+    "validatorInspiration": ["Un viaje de último momento", "Una noche de juegos de rol (kinky)", "Una gran sorpresa material (caro)"]
+  },
+  {
+    "slug": "sorpresa",
+    "name": "Sorpresa",
+    "tagline": "Elige la aventura.",
+    "description": "Una experiencia única en cada mordida. El sabor cambia cada temporada, asegurando que cada ritual sea una aventura totalmente nueva. ¡Ideal para reavivar la chispa!",
+    "price": "55.000",
+    "image": "/mockups/export/desktop/mockup_sorpresa_montaje.jpg",
+    "validatorDescription": "El chocolate Sorpresa siempre es una aventura. Su sabor cambia cada temporada para reavivar la chispa sin planificación. Perfecto para quienes prefieren la espontaneidad.",
+    "validatorInspiration": ["Un camino totalmente nuevo", "Descubrimiento de un nuevo hobby", "Una experiencia lúdica inesperada"]
+  }
+ ]
+}

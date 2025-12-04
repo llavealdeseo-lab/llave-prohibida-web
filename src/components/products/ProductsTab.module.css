@@ -1,0 +1,82 @@
+.container {
+    position: absolute; /* << FIX CRÍTICO: Posicionamiento absoluto >> */
+    top: 0;
+    right: 0;
+    z-index: 10; /* Asegura que esté siempre visible */
+    /* Margen para separarlo del borde de la pantalla */
+    margin-top: 30px;
+    margin-right: 90px;
+}
+
+.tab {
+    background-color: rgba(165, 42, 42, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 0 0 0 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tab:hover {
+    background-color: #a52a2a;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%; /* Coloca el menú justo debajo de la pestaña */
+    right: 0; /* Lo alinea a la derecha */
+    width: 250px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 0 0 10px 10px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transform-origin: top;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuTitle {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #ddd;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #fff;
+    text-decoration: none;
+    padding: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+    border-radius: 5px;
+}
+
+.menuItem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.menuItem img {
+    border-radius: 50%;
+}

@@ -1,0 +1,182 @@
+/* llave-prohibida/src/app/cierre/CierrePage.module.css */
+
+/* src/app/cierre/CierrePage.module.css */
+
+.main {
+    min-height: 100vh;
+    background-color: #000;
+    background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    font-family: 'Times New Roman', serif;
+    color: #eee;
+    text-align: center;
+}
+
+/* --- LOADING --- */
+.loadingContainer {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    color: #ffd700;
+    text-align: center;
+    padding: 20px;
+}
+
+.loadingText {
+    font-size: 1.2rem;
+}
+
+/* --- TEXTO SUPERIOR --- */
+.legendSection {
+    margin-bottom: 2rem;
+}
+
+.legendSection h1 {
+    font-size: 1.8rem;
+    color: #ff004c; 
+    margin-bottom: 0.5rem;
+}
+
+.legend {
+    font-size: 1rem;
+    font-style: italic;
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+/* --- TABLERO (GRILLA) --- */
+.board {
+    display: grid;
+    /* 3 columnas para móvil */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 10px;
+    width: 100%;
+    max-width: 400px; 
+    margin: 0 auto 2rem;
+}
+
+@media (min-width: 600px) {
+    .board {
+        /* 5 columnas para desktop */
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 800px;
+        gap: 15px;
+    }
+}
+
+/* --- CARTA (Estática) --- */
+.cardWrapper {
+    aspect-ratio: 2 / 3;
+    width: 100%;
+}
+
+.card {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    /* Se asume que esta es la imagen del anverso */
+    background-image: url('/cards/export/carta_front.png'); 
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    transition: all 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid transparent; 
+}
+
+/* --- RESALTADO GANADOR (Brillo y borde) --- */
+/* P1: Blanco */
+.winnerP1 {
+    border: 3px solid #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+}
+
+/* P2: Dorado */
+.winnerP2 {
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 5px rgba(255, 215, 0, 1);
+    transform: scale(1.05);
+}
+
+
+/* --- CONTENIDO DE LA CARTA --- */
+.frontContent {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.5rem;
+    width: 95%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+
+.frontTitle {
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    font-size: 0.7rem;
+    margin-bottom: 0.3rem;
+    color: #800020;
+    text-transform: uppercase;
+    line-height: 1.1;
+}
+
+.frontDesc {
+    font-family: Arial, sans-serif;
+    font-size: 0.6rem;
+    color: #333;
+    line-height: 1.2;
+}
+
+/* --- TEXTO INFERIOR / BOTÓN --- */
+.footerSection {
+    margin-top: 1rem;
+    max-width: 600px;
+}
+
+.closureMessage {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: #bbb;
+}
+
+.exploreMessage {
+    font-size: 0.9rem;
+    color: #ffd700;
+    font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+.exploreButton {
+    background: #ff004c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.exploreButton:hover {
+    background: #e60044;
+    transform: translateY(-2px);
+}
+
+.sessionFooter {
+    margin-top: 2rem;
+    color: #555;
+    font-size: 0.7rem;
+}

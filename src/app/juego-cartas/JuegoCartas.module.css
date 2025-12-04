@@ -1,0 +1,191 @@
+/* src/app/juego-cartas/JuegoCartas.module.css */
+
+/* JuegoCartas.module.css - mobile-first */
+/* src/app/juego-cartas/JuegoCartas.module.css */
+
+.main {
+  min-height: 100vh;
+  background-color: #000;
+  background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  font-family: 'Times New Roman', serif;
+  overflow: hidden;
+}
+
+.loadingContainer {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  color: #ffd700;
+  text-align: center;
+  padding: 20px;
+}
+
+.loadingText {
+  animation: pulse 1.5s infinite;
+  font-size: 1.2rem;
+}
+
+/* --- HEADER --- */
+.header {
+  text-align: center;
+  margin-bottom: 1rem;
+  z-index: 10;
+}
+
+.roleBadge {
+  display: inline-block;
+  background: #333;
+  color: #ffd700;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #555;
+}
+
+.legend {
+  color: #eee;
+  font-size: 0.9rem;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* --- TABLERO (GRILLA) --- */
+.board {
+  display: grid;
+  /* MÓVIL: 3 columnas x 4 filas (más compacto) */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  perspective: 1000px; /* Necesario para el 3D */
+}
+
+/* --- CARTA (Estructura 3D) --- */
+.cardWrapper {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+.cardInner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 8px;
+}
+
+/* ESTADO: Carta volteada */
+.cardWrapper.flipped .cardInner {
+  transform: rotateY(180deg);
+}
+
+/* --- CARAS DE LA CARTA --- */
+.cardFront, .cardBack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden; /* Oculta la parte de atrás */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+  overflow: hidden; /* Evita que la imagen se salga */
+}
+
+/* --- REVERSO (Diseño Negro) --- */
+.cardBack {
+  background: #151515;
+  background-image: url('/cards/export/carta_back.png');
+  background-size: cover;
+  background-position: center;
+  border: 1px solid #333;
+}
+
+/* --- ANVERSO (Diseño Blanco/Contenido) --- */
+.cardFront {
+  background: #f0f0f0;
+  background-image: url('/cards/export/carta_front.png');
+  background-size: cover;
+  background-position: center;
+  transform: rotateY(180deg); /* Ya está girada para cuando se voltee */
+  padding: 5px;
+  text-align: center;
+}
+
+.frontContent {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem;
+  width: 95%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ccc;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+
+.frontTitle {
+  font-family: 'Times New Roman', serif;
+  font-weight: bold;
+  font-size: 0.7rem;
+  margin-bottom: 0.3rem;
+  color: #800020;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.frontDesc {
+  font-family: Arial, sans-serif;
+  font-size: 0.6rem;
+  color: #333;
+  line-height: 1.2;
+}
+
+/* --- BORDES DE SELECCIÓN (Punto 4 Corregido) --- */
+/* Se aplican a .cardInner para que giren con la carta */
+
+/* P1: Borde Blanco Brillante */
+.borderP1 {
+  border: 3px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+/* P2: Borde Dorado */
+.borderP2 {
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+/* --- ICONOS DE ESTADO --- */
+.lockIcon {
+  font-size: 2rem;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 2px black);
+}
+
+.checkIcon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 2px black);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

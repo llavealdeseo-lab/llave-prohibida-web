@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
-import ProductsTab from '@/components/products/ProductsTab.jsx';
+import ProductsTab from '@/components/Products/ProductsTab.jsx';
 import data from '../data/leyendas.json'; // << NUEVA IMPORTACIÓN DE LEYENDAS >>
 
 export default function Home() {

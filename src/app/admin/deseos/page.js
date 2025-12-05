@@ -302,7 +302,7 @@ export default function DeseosAdmin() {
       <div className="bg-gray-900 p-6 rounded-lg border border-yellow-700 mb-8">
           <h2 className="text-xl text-yellow-400 mb-4">✨ Curación de Sugerencias Oficiales</h2>
           <p className="text-sm text-gray-400 mb-4">
-              Revise los deseos más pedidos. Marque como 'Sugerencia' para que aparezcan en la aplicación y sean fáciles de elegir por los usuarios.
+              Revise los deseos más pedidos. Marque como Sugerencia para que aparezcan en la aplicación y sean fáciles de elegir por los usuarios.
           </p>
 
           <div className="flex gap-4 overflow-x-auto pb-4">

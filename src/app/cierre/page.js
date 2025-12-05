@@ -132,7 +132,7 @@ export default function CierrePage() {
             <section className={styles.legendSection}>
                 <h1>El Velo de la Noche ha Caído.</h1>
                 <p className={styles.legend}>
-                    "El ritual ha terminado, recuerden que se comprometieron a cumplir. Aquí están sus dos tareas"
+                    &quot;El ritual ha terminado, recuerden que se comprometieron a cumplir. Aquí están sus dos tareas.&quot;
                 </p>
             </section>
 
@@ -159,8 +159,8 @@ export default function CierrePage() {
 
             <section className={styles.footerSection}>
                 <p className={styles.closureMessage}>
-                    "Su sesión ha terminado. El código QR se bloqueará y no podrán usarlo para jugar de nuevo, 
-                    aunque sí les quedará de recuerdo. Si lo escanean les mostrará esta pantalla."
+                    &quot;Su sesión ha terminado. El código QR se bloqueará y no podrán usarlo para jugar de nuevo, 
+                    aunque sí les quedará de recuerdo. Si lo escanean les mostrará esta pantalla.&quot;
                 </p>
                 <p className={styles.exploreMessage}>
                     Si quieren una revancha, o la llave que compraron no incluía tu verdadero deseo, 

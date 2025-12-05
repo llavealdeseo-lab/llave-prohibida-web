@@ -328,7 +328,7 @@ export default function InvitationPage() {
       />
 
       <section className={styles.overlay}>
-        <img
+        <Image
           src="/icons/export/logo_llaveprohibida_200.png"
           alt="Llave Prohibida Logo"
           className={styles.logo}

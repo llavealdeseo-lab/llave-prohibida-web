@@ -1,4 +1,5 @@
 // src/app/cierre/page.js
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ export default function CierrePage() {
     );
 
     // Lógica principal: Obtener datos y bloquear la sesión/QR
+    // NOTA: Esta función se define con useCallback o se incluye en el array de dependencias.
     const finalizeSession = async () => {
         if (!sessionId) {
             setMsg("Error: Falta ID de sesión.");
@@ -35,10 +37,9 @@ export default function CierrePage() {
 
         try {
             // 1. Obtener los datos finales de la sesión (Mazo, elecciones, QR asociado)
-            // Se asume que la sesión tiene una columna 'qr_id' que enlaza al código.
             const { data, error } = await supabase
                 .from('game_sessions')
-                .select('final_deck, p1_state, p2_state, status, qr_id') // AÑADIDO: qr_id
+                .select('final_deck, p1_state, p2_state, status, qr_id')
                 .eq('id', sessionId)
                 .single();
 
@@ -65,7 +66,6 @@ export default function CierrePage() {
                     .from('game_sessions')
                     .update({ 
                         status: 'CLOSED',
-                        // Opcional: Guardar un snapshot final explícito si la tabla lo requiere
                         final_results_snapshot: { deck: finalDeck, p1: p1Sel, p2: p2Sel } 
                     })
                     .eq('id', sessionId);
@@ -115,9 +115,10 @@ export default function CierrePage() {
         }
     };
 
+    // CORRECCIÓN: Se incluye finalizeSession en el array de dependencias
     useEffect(() => {
         finalizeSession();
-    }, [sessionId]);
+    }, [sessionId, finalizeSession]); 
 
     const handleExplore = () => {
         // Redirige a la página principal (Modo Exploración)
@@ -132,7 +133,7 @@ export default function CierrePage() {
             <section className={styles.legendSection}>
                 <h1>El Velo de la Noche ha Caído.</h1>
                 <p className={styles.legend}>
-                    &quot;El ritual ha terminado, recuerden que se comprometieron a cumplir. Aquí están sus dos tareas.&quot;
+                    **&quot;**El ritual ha terminado, recuerden que se comprometieron a cumplir. Aquí están sus dos tareas.**&quot;**
                 </p>
             </section>
 
@@ -159,12 +160,12 @@ export default function CierrePage() {
 
             <section className={styles.footerSection}>
                 <p className={styles.closureMessage}>
-                    &quot;Su sesión ha terminado. El código QR se bloqueará y no podrán usarlo para jugar de nuevo, 
-                    aunque sí les quedará de recuerdo. Si lo escanean les mostrará esta pantalla.&quot;
+                    **&quot;**Su sesión ha terminado. El código QR se bloqueará y no podrán usarlo para jugar de nuevo, 
+                    aunque sí les quedará de recuerdo. Si lo escanean les mostrará esta pantalla.**&quot;**
                 </p>
                 <p className={styles.exploreMessage}>
                     Si quieren una revancha, o la llave que compraron no incluía tu verdadero deseo, 
-                    puedes explorar qué chocolate lo incluye.
+                    pueden explorar qué chocolate lo incluye.
                 </p>
                 
                 <button 
@@ -174,7 +175,7 @@ export default function CierrePage() {
                     EXPLORAR CHOCOLATE
                 </button>
                 <footer className={styles.sessionFooter}>
-                    <small>ID de Sesión: <strong>{sessionId}</strong></small>
+                    <small>ID de Sesión: **{sessionId}**</small>
                 </footer>
             </section>
         </main>

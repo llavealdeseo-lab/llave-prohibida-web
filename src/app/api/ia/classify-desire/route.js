@@ -1,20 +1,50 @@
-// src/app/api/ia/classify-desire/route.js
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/redis"; 
 
 export const runtime = 'edge';
 
 export async function POST(req) {
-  try {
-    const { desire } = await req.json();
+    
+    // 1. OBTENER LA IP DEL CLIENTE
+    const ip = req.headers.get('x-forwarded-for') || 'anonymous'; 
 
-    if (!desire) return NextResponse.json({ error: 'Falta el deseo' }, { status: 400 });
+    // 2. APLICAR RATE LIMITING: MÁXIMO 10 PETICIONES EN 86400 SEGUNDOS (1 día)
+    const DAILY_LIMIT = 10;
+    const DAY_IN_SECONDS = 60 * 60 * 24; // 86400 segundos
 
-    const prompt = `
-      Eres un Juez Clasificador para el juego 'Llave Prohibida'.
-      Tu única tarea es analizar la INTENSIDAD de un deseo y asignarle un puntaje numérico del 1 al 15.
+    const { success, remaining, reset } = await checkRateLimit(ip, DAILY_LIMIT, DAY_IN_SECONDS);
+
+    if (!success) {
+        // Calcular el tiempo de espera restante en horas/minutos
+        const timeRemainingMs = reset - Date.now();
+        const timeRemainingSeconds = Math.ceil(timeRemainingMs / 1000);
+        const hours = Math.floor(timeRemainingSeconds / 3600);
+        const minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
+
+        return NextResponse.json({ 
+            error: "Límite diario alcanzado.", 
+            message: `Has excedido el límite de ${DAILY_LIMIT} clasificaciones por día. Intenta de nuevo en aproximadamente ${hours} horas y ${minutes} minutos.` 
+        }, {
+            status: 429,
+            headers: {
+                'X-RateLimit-Limit': DAILY_LIMIT.toString(),
+                'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Reset': reset.toString(),
+            },
+        });
+    }
+
+    try {
+        const { desire } = await req.json();
+
+        if (!desire) return NextResponse.json({ error: 'Falta el deseo' }, { status: 400 });
+
+        const prompt = `
+      Eres un Juez Clasificador para el juego 'Llave Prohibida'.
+      Tu única tarea es analizar la INTENSIDAD de un deseo y asignarle un puntaje numérico del 1 al 15.
 
       TABLA DE PUNTUACIÓN:
       
@@ -45,11 +75,17 @@ export async function POST(req) {
       prompt: prompt,
     });
 
-    return NextResponse.json(object);
+   return NextResponse.json(object, {
+         headers: {
+            'X-RateLimit-Limit': DAILY_LIMIT.toString(),
+            'X-RateLimit-Remaining': remaining.toString(), 
+            'X-RateLimit-Reset': reset.toString(),
+        },
+    });
 
-  } catch (error) {
-    console.error("Error en clasificación:", error);
-    // Fallback de seguridad: devolvemos un puntaje medio si falla
-    return NextResponse.json({ score: 7, reasoning: "Error IA" }, { status: 500 });
-  }
+  } catch (error) {
+    console.error("Error en clasificación:", error);
+    // Fallback de seguridad: devolvemos un puntaje medio si falla
+    return NextResponse.json({ score: 7, reasoning: "Error IA" }, { status: 500 });
+  }
 }

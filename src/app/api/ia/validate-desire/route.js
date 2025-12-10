@@ -45,7 +45,7 @@ export async function POST(req) {
     `;
 
     const { object } = await generateObject({
-      model: google("gemini-2.5-pro"),
+      model: google("gemini-2.5-flash"),
       schema: z.object({
         isApproved: z.boolean(),
         isLowerCategory: z.boolean(),

@@ -67,7 +67,7 @@ export async function POST(req) {
     `;
 
     const { object } = await generateObject({
-      model: google("gemini-2.5-pro"),
+      model: google("gemini-2.5-flash"),
       schema: z.object({
         score: z.number().min(1).max(15).describe("Puntaje de intensidad calculado del 1 al 15"),
         reasoning: z.string().describe("Breve explicación de por qué se asignó ese puntaje (ej: 'Es un viaje costoso')")

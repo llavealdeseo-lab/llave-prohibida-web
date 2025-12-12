@@ -31,7 +31,7 @@ export async function POST(req) {
 
     // Usamos 'generateObject' para forzar a la IA a responder SOLO en JSON
     const { object } = await generateObject({
-      model: google("gemini-1.5-pro-latest"),
+      model: google("gemini-1.5-flash-latest"),
       schema: z.object({
         isApproved: z.boolean(),
         isLowerCategory: z.boolean(),

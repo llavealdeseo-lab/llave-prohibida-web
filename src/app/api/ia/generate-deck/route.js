@@ -63,7 +63,7 @@ export async function POST(req) {
             prompt: `Genera las 8 cartas para el mazo. Revisa las 4 cartas para P1 (max ${maxScoreP2_Deck}) y las 4 para P2 (max ${maxScoreP1_Deck}).`,
             system: systemPrompt,
         });
-        
+
         // Verificación de seguridad
         if (!object.deck || object.deck.length !== 8) {
              throw new Error(`La IA no generó el número correcto de cartas (esperado: 8, recibido: ${object.deck ? object.deck.length : 0}).`);
@@ -72,11 +72,28 @@ export async function POST(req) {
         return NextResponse.json(object);
 
     } catch (error) {
-        // El log ahora tendrá el error de validación o timeout real si ocurre
-        console.error("Error al generar mazo de IA (FALLO CRÍTICO):", error);
-        return NextResponse.json(
-            { deck: [], summary: "Error al generar mazo. Timeout/Parsing failure." },
-            { status: 500 }
-        );
+        // --- INICIO DE LÓGICA DE RESPALDO (FALLBACK) ---
+        console.error("⚠️ Fallo en IA (Deck), usando respaldo estático:", error);
+        
+        // 1. Obtener cartas estáticas del FALLBACK_DECKS
+        const staticCards = FALLBACK_DECKS[category] || FALLBACK_DECKS['PASION'];
+        
+        // 2. Mezclar (Shuffle) simple las 8 cartas
+        const shuffled = [...staticCards].sort(() => 0.5 - Math.random());
+
+        // 3. Dividir 4 P1 y 4 P2 para asegurar el balance, si el shuffle no lo hizo perfectamente
+        const p1Cards = shuffled.filter(c => c.target === 'P1').slice(0, 4);
+        const p2Cards = shuffled.filter(c => c.target === 'P2').slice(0, 4);
+        
+        // Juntar 4 y 4 para asegurar que siempre haya 8 cartas
+        const finalFallbackDeck = [...p1Cards, ...p2Cards];
+        
+        // 4. Devolver formato esperado, incluyendo las cartas P1/P2 originales del usuario
+        return NextResponse.json({ 
+            deck: finalFallbackDeck, // Solo las 8 cartas generadas por el respaldo
+            summary: "Mazo generado por el destino (Modo Respaldo Estático)." 
+        });
+        // --- FIN DE LÓGICA DE RESPALDO ---
     }
 }
+        

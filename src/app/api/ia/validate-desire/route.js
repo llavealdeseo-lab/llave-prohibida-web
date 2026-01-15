@@ -10,7 +10,7 @@ import { generateObject } from "ai";
 
 import { z } from "zod";
 
-import { NextResponse } from "next/server"; 
+import { NextResponse } from "next/server";
 
 
 
@@ -22,90 +22,67 @@ export async function POST(req) {
 
   try {
 
-    const { desire, category } = await req.json();
-
-
+    const { desire, category, p1Name, partnerDesire, userProfile } = await req.json();
 
     if (!desire || !category) {
-
-        return NextResponse.json({ 
-
-            isApproved: false, 
-
-            isLowerCategory: false, 
-
-            message: 'Faltan parámetros de deseo o categoría.' 
-
-        }, { status: 400 });
-
+      return NextResponse.json({
+        isApproved: false,
+        isLowerCategory: false,
+        message: 'Faltan parámetros de deseo o categoría.'
+      }, { status: 400 });
     }
 
+    const genderContext = userProfile?.gender ? `El usuario se identifica como: ${userProfile.gender}.` : "";
+    const interestContext = (userProfile?.language === 'gifts' || userProfile?.cost === 'money')
+      ? "Al usuario le interesan mucho los regalos y los deseos monetarios o de valor material. Intenta sugerir algo en ese eje si su deseo actual es tibio."
+      : "";
 
+    const partnerContext = partnerDesire ? `
+        TU PAREJA HA PEDIDO: "${partnerDesire}".
+        Si notas que los deseos son muy desparejos, coméntalo en el 'aiWhisper' incitando a equilibrar.
+    ` : "Tu pareja aún no ha revelado su deseo.";
 
     const prompt = `
+      Eres el 'Intermediario Perverso' para el juego 'Llave Prohibida'.
+      Tu función es CLASIFICAR el deseo de ${p1Name || 'el usuario'} y VALIDARLO contra la categoría ${category}.
 
-      Eres un Juez de Deseos para el juego 'Llave Prohibida'. Tu única función es CLASIFICAR el deseo del usuario en la categoría real (Tentación, Pasión o Deseo Prohibido) y VALIDARLO estrictamente contra su llave actual (${category}).
+      ### CONTEXTO DEL USUARIO:
+      ${genderContext}
+      ${interestContext}
+      ${partnerContext}
 
-      
+      ### REGLAS DE ORO (INVIOLABLES):
+      1. **SEXO ANAL**: Pertenece SIEMPRE a la categoría 'DESEO PROHIBIDO' (Intensity 11-15). Nunca lo apruebes en Tentación o Pasión.
+      2. **LÍMITES MONETARIOS**:
+         - TENTACIÓN: Máximo 100 USD (o equivalente simbólico).
+         - PASIÓN: Máximo 300 USD.
+         - DESEO PROHIBIDO: Máximo 3,000 USD.
+         Si el deseo excede el monto de la categoría actual, debe ser RECHAZADO (isApproved: false).
 
-      Criterios de Clasificación (Intensidad, Valor Monetario y Carga Emocional):
+      ### PERSONALIDAD:
+      Eres seductor, observador y manipulador. Devolverás un 'aiWhisper' corto y provocador.
+      - Si el perfil muestra interés en regalos ('gifts'/'money'), y el deseo es romántico, sugiere algo de valor material que eleve la apuesta.
 
-      
+      ### CRITERIOS DE CATEGORÍA:
+      1. TENTACIÓN: Romántico, suave (Intensity 1-5). < 100 USD.
+      2. PASIÓN: Erótico, sensual (Intensity 6-10). < 300 USD.
+      3. DESEO PROHIBIDO: Tabú (ej: sexo anal), extremo, alto valor monetario (Intensity 11-15). < 3,000 USD.
 
-      1. TENTACIÓN (Intensidad 1-5): Deseos suaves, románticos. Regalos pequeños (≤ USD 100). EJEMPLOS CLAVE: Abrazos, citas tranquilas, regalos pequeños.
-
-      
-
-      2. PASIÓN (Intensidad 6-10): Deseos eróticos, juegos íntimos. Regalos medianos (≤ USD 300). EJEMPLOS CLAVE: Cena lujosa, baile erótico, spa.
-
-      
-
-      3. DESEO PROHIBIDO (Intensidad 11-15): Deseos extremos, tabúes sexuales, compromisos vitales o regalos de MUY ALTO valor (≤ USD 3000). EJEMPLOS CLAVE: Sexo en público, azotes con látigo, pedir casamiento, VIAJES CAROS (como UN VIAJE A BRASIL).
-
-      
-
-      Tu llave actual es: ${category}.
-
-      
-
-      Instrucciones de Validación:
-
-      1. CLASIFICA el deseo en la categoría real (Tentación, Pasión o Prohibido) según los CRITERIOS y EJEMPLOS de arriba.
-
-      2. Si el deseo es de una categoría superior a tu llave actual: Recházalo (isApproved: false). El mensaje debe ser: "Tu deseo es más osado que tu llave actual. Te sugiero probar un chocolate Deseo Prohibido."
-
-      3. Si el deseo es de la misma categoría que tu llave actual: Acéptalo (isApproved: true, isLowerCategory: false).
-
-      4. Si el deseo es de una categoría inferior a tu llave actual: Acéptalo (isApproved: true), pero marca isLowerCategory: true. El mensaje debe ser: "Tu deseo es válido, pero podrías pedir algo más osado para aprovechar tu llave."
-
-      
-
-      Deseo del Usuario: "${desire}"
-
-      
-
-      Responde ÚNICAMENTE con el objeto JSON. No añadas texto explicativo.
-
+      ### INSTRUCCIONES:
+      - isApproved: true si el deseo es <= categoría actual.
+      - isLowerCategory: true si el deseo es < categoría actual.
     `;
 
-
-
     const { object } = await generateObject({
-
       model: google("gemini-2.5-flash"),
-
       schema: z.object({
-
         isApproved: z.boolean(),
-
         isLowerCategory: z.boolean(),
-
-        message: z.string().describe("Feedback corto para el usuario en español, tono seductor pero claro, basado en la instrucción de validación."),
-
+        message: z.string().describe("Feedback técnico."),
+        aiWhisper: z.string().describe("Comentario seductor y perverso de la IA sobre el deseo."),
       }),
-
-      prompt: prompt,
-
+      prompt: `Deseo de ${p1Name || 'usuario'}: "${desire}"`,
+      system: prompt,
     });
 
 
@@ -117,15 +94,16 @@ export async function POST(req) {
   } catch (error) {
     // --- INICIO DE LÓGICA DE RESPALDO (FALLBACK) ---
     console.error("⚠️ Error de conexión con IA (Validación), aprobando automáticamente:", error);
-    
+
     // Si la IA falla, siempre aprobamos el deseo para evitar bloquear al jugador.
     return NextResponse.json(
-        { 
-            isApproved: true, 
-            isLowerCategory: false, 
-            message: 'El destino ha aceptado tu deseo. Procede con el ritual.' 
-        }, 
-        { status: 200 } // Devolver 200 (OK) para que el frontend avance
+      {
+        isApproved: true,
+        isLowerCategory: false,
+        message: 'El destino ha aceptado tu deseo. Procede con el ritual.',
+        aiWhisper: "Tu deseo brilla con una luz propia, aunque mis ojos estén nublados ahora... me gusta."
+      },
+      { status: 200 } // Devolver 200 (OK) para que el frontend avance
     );
     // --- FIN DE LÓGICA DE RESPALDO ---
   }

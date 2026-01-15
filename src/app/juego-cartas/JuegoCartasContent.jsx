@@ -1,6 +1,4 @@
 // src/app/juego-cartas/JuegoCartasContent.jsx
-// COMPONENTE DE CLIENTE CON LA LÓGICA DEL JUEGO
-
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -9,219 +7,259 @@ import styles from "./JuegoCartas.module.css";
 import { supabase } from "@/lib/supabaseClient";
 import { iaService } from "@/services/iaService";
 
-export default function JuegoCartasContent() { // <-- Renombrado
-  const router = useRouter();
-  const params = useSearchParams();
-  
-  const sessionId = params.get("session") || params.get("sessionId");
-  const role = (params.get("role") || params.get("joinAs") || "p1").toLowerCase(); 
+const RPS_OPTIONS = [
+    { id: 'rock', emoji: '🪨', label: 'Piedra' },
+    { id: 'paper', emoji: '📄', label: 'Papel' },
+    { id: 'scissors', emoji: '✂️', label: 'Tijera' }
+];
 
-  const [sessionData, setSessionData] = useState(null);
-  const [deck, setDeck] = useState([]); 
-  const [msg, setMsg] = useState("Conectando con la mesa...");
-  
-  // Estados visuales
-  const [myChoice, setMyChoice] = useState(null);
-  const [partnerChoice, setPartnerChoice] = useState(null);
-  const [isRevealed, setIsRevealed] = useState(false);
+export default function JuegoCartasContent() {
+    const router = useRouter();
+    const params = useSearchParams();
 
-  // Control de generación para no llamar a la IA 10 veces
-  const isGeneratingRef = useRef(false);
+    const sessionId = params.get("session") || params.get("sessionId");
+    const role = (params.get("role") || params.get("joinAs") || "p1").toLowerCase();
 
-  // 1. CARGA INICIAL + REALTIME + GENERACIÓN AUTOMÁTICA
-  useEffect(() => {
-    if (!sessionId) {
-        setMsg("Error: Falta ID de sesión.");
-        return;
-    }
+    const [sessionData, setSessionData] = useState(null);
+    const [deck, setDeck] = useState([]);
+    const [msg, setMsg] = useState("Conectando con la mesa...");
 
-    // Función para procesar los datos que llegan (de carga inicial o de realtime)
-    const processSessionData = async (data) => {
-        setSessionData(data);
+    // Estados de Juego
+    const [rpsChoice, setRpsChoice] = useState(null);
+    const [myChoice, setMyChoice] = useState(null);
+    const [partnerChoice, setPartnerChoice] = useState(null);
+    const [isRevealed, setIsRevealed] = useState(false);
+    const [discardedIndices, setDiscardedIndices] = useState([]);
 
-        // A. SI YA HAY MAZO -> MOSTRAR JUEGO
-        if (data.final_deck && Array.isArray(data.final_deck) && data.final_deck.length > 0) {
-            setDeck(data.final_deck);
-            setMsg("");
-            
-            // Sincronizar elecciones
-            const p1Sel = data.p1_state?.card_selected;
-            const p2Sel = data.p2_state?.card_selected;
-            const amIP1 = role === 'p1';
+    const isGeneratingRef = useRef(false);
+    const backupTimeoutRef = useRef(null);
 
-            setMyChoice(amIP1 ? p1Sel : p2Sel);
-            setPartnerChoice(amIP1 ? p2Sel : p1Sel);
+    // --- 1. LÓGICA DE SINCRONIZACIÓN (REALTIME) ---
+    useEffect(() => {
+        if (!sessionId) return setMsg("Error: Falta ID de sesión.");
 
-            // Sincronizar Revelación
-            if (data.status === 'REVEALED') {
-                setIsRevealed(true);
-            } else if (p1Sel != null && p2Sel != null) {
-                // Si ambos eligieron pero la DB no dice REVEALED, lo forzamos (solo P1)
-                if (amIP1) await supabase.from('game_sessions').update({ status: 'REVEALED' }).eq('id', sessionId);
-            }
-            return; 
-        }
+        const processSessionData = async (data) => {
+            console.log("📥 Sync Phase:", data.status);
+            setSessionData(data);
+            const amIP1 = role === 'p1';
+            const myState = amIP1 ? data.p1_state : data.p2_state;
+            const partnerState = amIP1 ? data.p2_state : data.p1_state;
 
-        // B. SI NO HAY MAZO -> VERIFICAR SI PODEMOS GENERARLO
-        const p1Ready = data.p1_state?.desire && data.p1_state?.desire_category;
-        const p2Ready = data.p2_state?.desire && data.p2_state?.desire_category;
+            // A. CARGAR MAZO
+            if (data.final_deck && data.final_deck.length > 0) {
+                setDeck(data.final_deck);
+                setMsg("");
 
-        if (p1Ready && p2Ready) {
-            // Ambos tienen deseos. ¿Soy P1? -> Genero el mazo.
-            if (role === 'p1') {
-                if (isGeneratingRef.current) return; // Evitar doble llamada
-                isGeneratingRef.current = true;
-                setMsg("🔮 La IA está creando el ritual... (No recargues)");
+                if (backupTimeoutRef.current) {
+                    clearTimeout(backupTimeoutRef.current);
+                    backupTimeoutRef.current = null;
+                }
 
-                try {
-                    const genResult = await iaService.generateFinalDeck(
-                        data.category, 
-                        { text: data.p1_state.desire, score: data.p1_state.score }, 
-                        { text: data.p2_state.desire, score: data.p2_state.score }
-                    );
+                setRpsChoice(myState?.rps_choice);
+                setMyChoice(myState?.card_selected);
+                setPartnerChoice(partnerState?.card_selected);
+                setDiscardedIndices(data.p1_state?.discarded_indices || []);
 
-                    await supabase.from('game_sessions').update({ final_deck: genResult.deck }).eq('id', sessionId);
-                    // No seteamos deck aquí, esperamos a que el Realtime nos devuelva la actualización para estar sincronizados.
-                } catch (e) {
-                    console.error("Error IA:", e);
-                    setMsg("Error generando cartas. Reintentando...");
-                    isGeneratingRef.current = false;
-                }
-            } else {
-                setMsg("Tu pareja está barajando las cartas...");
-            }
-        } else {
-            // Falta alguien
-            if (!p1Ready && !p2Ready) setMsg("Esperando deseos de ambos...");
-            else if (!p1Ready) setMsg("Esperando el deseo del Jugador 1...");
-            else if (!p2Ready) setMsg("Esperando a que tu pareja confirme su deseo...");
-        }
-    };
+                if (data.status === 'REVEALED') setIsRevealed(true);
 
-    // Carga inicial
-    const fetchInitial = async () => {
-        const { data, error } = await supabase.from('game_sessions').select('*').eq('id', sessionId).single();
-        if (data && !error) processSessionData(data);
-    };
-    fetchInitial();
+                // DETERMINAR GANADOR RPS SI AMBOS ELIGIERON
+                if (data.status === 'RPS' && data.p1_state?.rps_choice && data.p2_state?.rps_choice) {
+                    if (role === 'p1') {
+                        const winner = calculateRPSWinner(data.p1_state.rps_choice, data.p2_state.rps_choice);
+                        if (winner === 'tie') {
+                            await supabase.from('game_sessions').update({
+                                'p1_state': { ...data.p1_state, rps_choice: null },
+                                'p2_state': { ...data.p2_state, rps_choice: null }
+                            }).eq('id', sessionId);
+                        } else {
+                            // Defensive update: Some environments might lack ai_narration column
+                            const updatePayload = {
+                                status: 'DISCARD',
+                                'p1_state': { ...data.p1_state, rps_winner: winner }
+                            };
+                            await supabase.from('game_sessions').update(updatePayload).eq('id', sessionId);
+                        }
+                    }
+                }
+                return;
+            }
 
-    // SUSCRIPCIÓN REALTIME (Escucha todo cambio)
-    const channel = supabase
-      .channel(`game_logic_${sessionId}`)
-      .on('postgres_changes', 
-          { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
-          (payload) => processSessionData(payload.new)
-      )
-      .subscribe();
+            // B. GENERAR MAZO SI AMBOS LISTOS
+            if (data.p1_state?.desire && data.p2_state?.desire && data.status === 'ACTIVE') {
+                if (role === 'p1' && !isGeneratingRef.current) {
+                    isGeneratingRef.current = true;
+                    setMsg("🔮 El Maestro de Ceremonias está barajando...");
+                    try {
+                        const genResult = await iaService.generateFinalDeck(
+                            data.category,
+                            data.p1_state,
+                            data.p2_state,
+                            data.p1_state.profile,
+                            data.p2_state.profile,
+                            data.p1_state.name,
+                            data.p2_state.name
+                        );
 
-    // POLLING DE RESPALDO (Cada 2s por si falla Realtime)
-    const interval = setInterval(fetchInitial, 2000);
+                        // Intento de actualización robusto
+                        const mainPayload = {
+                            final_deck: genResult.deck,
+                            status: 'RPS'
+                        };
 
-    return () => { 
-        supabase.removeChannel(channel); 
-        clearInterval(interval);
-    };
-  }, [sessionId, role]);
+                        let { error: updateError } = await supabase.from('game_sessions').update(mainPayload).eq('id', sessionId);
 
+                        if (!updateError) {
+                            // Intentar guardar la narración por separado si la columna existe
+                            if (genResult.narration) {
+                                await supabase.from('game_sessions').update({ ai_narration: genResult.narration }).eq('id', sessionId).then(({ error }) => {
+                                    if (error) console.warn("Columna ai_narration no encontrada o error al guardar, continuando...");
+                                });
+                            }
+                        } else {
+                            console.error("Error fatal al guardar mazo:", updateError);
+                            isGeneratingRef.current = false;
+                        }
+                    } catch (e) {
+                        console.error("Error en flujo de generación:", e);
+                        isGeneratingRef.current = false;
+                    }
+                }
+            }
+        };
 
-  // 2. SELECCIÓN DE CARTA
-  const handleSelect = async (index) => {
-    // Bloqueos locales instantáneos
-    if (isRevealed) return;
-    if (myChoice != null) return; 
-    if (partnerChoice === index) return; 
+        const calculateRPSWinner = (p1, p2) => {
+            if (p1 === p2) return 'tie';
+            if ((p1 === 'rock' && p2 === 'scissors') || (p1 === 'paper' && p2 === 'rock') || (p1 === 'scissors' && p2 === 'paper')) return 'p1';
+            return 'p2';
+        };
 
-    // Optimistic UI (Feedback inmediato al usuario)
-    setMyChoice(index);
+        const fetchInitial = async () => {
+            const { data } = await supabase.from('game_sessions').select('*').eq('id', sessionId).single();
+            if (data) processSessionData(data);
+        };
+        fetchInitial();
 
-    try {
-        const playerKey = role === 'p1' ? 'p1_state' : 'p2_state';
-        // Leer estado actual para no borrar datos
-        const { data: current } = await supabase.from('game_sessions').select(playerKey).eq('id', sessionId).single();
-        const currentState = current ? current[playerKey] : {};
+        const channel = supabase.channel(`game_${sessionId}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` }, (p) => processSessionData(p.new)).subscribe();
+        const interval = setInterval(fetchInitial, 3000);
+        return () => { supabase.removeChannel(channel); clearInterval(interval); };
+    }, [sessionId, role]);
 
-        await supabase.from('game_sessions').update({
-            [playerKey]: { ...currentState, card_selected: index }
-        }).eq('id', sessionId);
+    // Ocultar acciones del jugador para brevedad, son iguales a la versión anterior
+    const handleRpsSelect = async (choice) => {
+        if (rpsChoice) return;
+        setRpsChoice(choice);
+        const playerKey = role === 'p1' ? 'p1_state' : 'p2_state';
+        const { data } = await supabase.from('game_sessions').select(playerKey).eq('id', sessionId).single();
+        await supabase.from('game_sessions').update({
+            [playerKey]: { ...data[playerKey], rps_choice: choice }
+        }).eq('id', sessionId);
+    };
 
-    } catch (e) {
-        console.error("Error al elegir:", e);
-        setMyChoice(null); // Revertir si falla
-    }
-  };
+    const handleDiscard = async (index) => {
+        const rpsWinner = sessionData.p1_state?.rps_winner;
+        if (sessionData.status !== 'DISCARD' || rpsWinner !== role) return;
+        if (discardedIndices.includes(index)) return;
+        if (deck[index]?.isParticipantDesire && deck[index]?.owner === role.toUpperCase()) return;
 
-  // 3. TRANSICIÓN A CIERRE
-  useEffect(() => {
-    if (isRevealed) {
-        const timer = setTimeout(() => {
-            router.push(`/cierre?sessionId=${sessionId}`);
-        }, 6000); 
-        return () => clearTimeout(timer);
-    }
-  }, [isRevealed, router, sessionId]);
+        const newDiscarded = [...discardedIndices, index];
+        setDiscardedIndices(newDiscarded);
 
+        if (newDiscarded.length === 2) {
+            await supabase.from('game_sessions').update({
+                'p1_state': { ...sessionData.p1_state, discarded_indices: newDiscarded },
+                status: 'CHOOSING'
+            }).eq('id', sessionId);
+        } else {
+            setMsg(`¡Vas 1! Elige otra.`);
+        }
+    };
 
-  // --- RENDER ---
-  const renderCardFront = (card) => (
-      <div className={styles.frontContent}>
-        <h3 className={styles.frontTitle}>{(card.title || "").toUpperCase()}</h3>
-        <p className={styles.frontDesc}>{(card.description || "").toLowerCase()}</p>
-      </div>
-  );
+    const handleFinalSelect = async (index) => {
+        const rpsWinner = sessionData.p1_state?.rps_winner;
+        const loser = rpsWinner === 'p1' ? 'p2' : 'p1';
+        if (sessionData.status !== 'CHOOSING' || role !== loser) return;
+        if (discardedIndices.includes(index) || myChoice != null) return;
 
-  // Si no hay mazo, mostramos pantalla de carga con el mensaje de estado
-  if (!deck.length) return <div className={styles.loadingContainer}><p className={styles.loadingText}>{msg}</p></div>;
+        setMyChoice(index);
+        const playerKey = role === 'p1' ? 'p1_state' : 'p2_state';
+        const { data } = await supabase.from('game_sessions').select(playerKey).eq('id', sessionId).single();
+        await supabase.from('game_sessions').update({
+            [playerKey]: { ...data[playerKey], card_selected: index },
+            status: 'REVEALED'
+        }).eq('id', sessionId);
+    };
 
-  return (
-    <main className={styles.main}>
-      <div className={styles.header}>
-        <div className={styles.roleBadge}>
-             {role === 'p1' ? "JUGADOR 1" : "JUGADOR 2"}
-        </div>
-        <p className={styles.legend}>
-           {isRevealed 
-             ? "¡El destino ha sido revelado!" 
-             : partnerChoice != null 
-                ? "¡Tu pareja ya eligió! Esa carta está bloqueada." 
-                : "Elige una carta para sellar tu deseo."}
-        </p>
-      </div>
+    useEffect(() => {
+        if (isRevealed) {
+            setTimeout(() => router.push(`/cierre?sessionId=${sessionId}`), 8000);
+        }
+    }, [isRevealed, router, sessionId]);
 
-      <section className={styles.board}>
-        {deck.map((card, idx) => {
-          const isMine = myChoice === idx;
-          const isPartners = partnerChoice === idx;
-          const isBlocked = isPartners && !isRevealed; // Bloqueo visual antes de revelar
+    if (!deck.length) return <div className={styles.loadingContainer}><div className={styles.loadingInner}><p className={styles.ritualCall}>🔮 Preparando Duelo...</p>{sessionData?.ai_narration && <p className={styles.aiWhisperNarration}><em>"{sessionData.ai_narration}"</em></p>}<p className={styles.loadingText}>{msg}</p></div></div>;
 
-          // Clases CSS dinámicas
-          let wrapperClass = styles.cardWrapper;
-          if (isRevealed) wrapperClass += ` ${styles.flipped}`;
-          
-          // Bordes de selección
-          let borderClass = '';
-          if (isMine) borderClass = role === 'p1' ? styles.borderP1 : styles.borderP2;
-          if (isPartners) borderClass = role === 'p1' ? styles.borderP2 : styles.borderP1;
+    const rpsWinner = sessionData.p1_state?.rps_winner;
+    const isWinner = rpsWinner === role;
+    const isLoser = rpsWinner && rpsWinner !== role;
+    const currentPhase = sessionData.status;
 
-          return (
-            <div key={idx} className={wrapperClass}>
-              <div className={`${styles.cardInner} ${borderClass}`}>
-                  
-                  {/* CARA TRASERA (Boca abajo) */}
-                  <div className={styles.cardBack} onClick={() => !isBlocked && !isRevealed && handleSelect(idx)}>
-                     {!isRevealed && isPartners && <div className={styles.lockIcon}>🔒</div>}
-                     {!isRevealed && isMine && <div className={styles.checkIcon}>✅</div>}
-                  </div>
+    return (
+        <main className={styles.main}>
+            {currentPhase === 'RPS' && (
+                <div className={styles.rpsOverlay}>
+                    <h2 className={styles.rpsTitle}>Duelo de Iniciativa</h2>
+                    <p className={styles.legend}>El ganador eliminará 2 cartas. El perdedor elegirá la última.</p>
+                    <div className={styles.rpsOptions}>
+                        {RPS_OPTIONS.map(opt => (
+                            <button key={opt.id} onClick={() => handleRpsSelect(opt.id)} className={`${styles.rpsOption} ${rpsChoice === opt.id ? styles.selected : ''}`}>
+                                {opt.emoji}
+                            </button>
+                        ))}
+                    </div>
+                    {rpsChoice && <p className={styles.loadingText}>Esperando al oponente...</p>}
+                </div>
+            )}
 
-                  {/* CARA FRONTAL (Boca arriba) */}
-                  <div className={styles.cardFront}>
-                    {renderCardFront(card)}
-                  </div>
+            <div className={styles.header}>
+                <div className={styles.roleBadge}>{role.toUpperCase()}</div>
+                <h3 className={styles.rpsWinnerMsg}>
+                    {currentPhase === 'DISCARD' && (isWinner ? "¡TU TURNO! DESCARTA 2" : "ESPERA... TU PAREJA ELIMINA")}
+                    {currentPhase === 'CHOOSING' && (isLoser ? "¡TU TURNO! ELIGE EL FINAL" : "TU PAREJA ELIGE EL FINAL")}
+                    {currentPhase === 'REVEALED' && "EL DESTINO SE HA SELLADO"}
+                </h3>
+            </div>
 
-              </div>
-            </div>
-          );
-        })}
-      </section>
-    </main>
-  );
+            <section className={styles.board}>
+                {deck.map((card, idx) => {
+                    const isDiscarded = discardedIndices.includes(idx);
+                    const isProtected = card.isParticipantDesire && card.owner === role.toUpperCase();
+                    const isWinnerAction = currentPhase === 'DISCARD' && isWinner;
+                    const isLoserAction = currentPhase === 'CHOOSING' && isLoser;
+
+                    return (
+                        <div key={idx} className={`${styles.cardWrapper} ${(isRevealed || isDiscarded) ? styles.flipped : ''} ${isProtected ? styles.protectedCard : ''}`}>
+                            <div className={`${styles.cardInner} ${myChoice === idx ? styles.borderP1 : ''} ${partnerChoice === idx ? styles.borderP2 : ''}`}>
+                                <div className={styles.cardBack} onClick={() => {
+                                    if (isWinnerAction) handleDiscard(idx);
+                                    else if (isLoserAction) handleFinalSelect(idx);
+                                }}>
+                                    {!isDiscarded && myChoice === idx && <div className={styles.checkIcon}>✅</div>}
+                                    {isProtected && !isDiscarded && currentPhase === 'DISCARD' && <div className={styles.protectedBadge}>TU DESEO</div>}
+                                </div>
+                                <div className={styles.cardFront}>
+                                    {isDiscarded ? (
+                                        <div className={styles.discardedLabel}>ELIMINADA</div>
+                                    ) : (
+                                        <div className={styles.frontContent}>
+                                            <h4 className={styles.frontTitle}>{card.title}</h4>
+                                            <p className={styles.frontDesc}>{card.description}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </section>
+        </main>
+    );
 }

@@ -1,18 +1,16 @@
 /* src/app/juego-cartas/JuegoCartas.module.css */
 
 /* JuegoCartas.module.css - mobile-first */
-/* src/app/juego-cartas/JuegoCartas.module.css */
-
 .main {
   min-height: 100vh;
   background-color: #000;
-  background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+  background-image: radial-gradient(circle at center, #1a1a1a 100%, #000 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   font-family: 'Times New Roman', serif;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .loadingContainer {
@@ -26,9 +24,44 @@
   padding: 20px;
 }
 
-.loadingText {
-  animation: pulse 1.5s infinite;
-  font-size: 1.2rem;
+.loadingInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 320px;
+}
+
+.ritualCall {
+  font-size: 1.5rem;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 0;
+}
+
+.aiWhisperNarration {
+  color: #ffd700;
+  font-size: 1.1rem;
+  font-style: italic;
+  line-height: 1.5;
+  background: rgba(255, 215, 0, 0.05);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 1px solid rgba(255, 215, 0, 0.3);
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- HEADER --- */
@@ -61,13 +94,13 @@
 /* --- TABLERO (GRILLA) --- */
 .board {
   display: grid;
-  /* MÓVIL: 3 columnas x 4 filas (más compacto) */
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
   width: 100%;
   max-width: 400px;
-  margin: 0 auto;
-  perspective: 1000px; /* Necesario para el 3D */
+  margin: 0 auto 2rem;
+  perspective: 1000px;
+  justify-content: center;
 }
 
 /* --- CARTA (Estructura 3D) --- */
@@ -76,6 +109,9 @@
   width: 100%;
   cursor: pointer;
   position: relative;
+  padding: 3px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 .cardInner {
@@ -87,41 +123,33 @@
   border-radius: 8px;
 }
 
-/* ESTADO: Carta volteada */
 .cardWrapper.flipped .cardInner {
   transform: rotateY(180deg);
 }
 
-/* --- CARAS DE LA CARTA --- */
-.cardFront, .cardBack {
+.cardFront,
+.cardBack {
   position: absolute;
   width: 100%;
   height: 100%;
-  backface-visibility: hidden; /* Oculta la parte de atrás */
+  backface-visibility: hidden;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-  overflow: hidden; /* Evita que la imagen se salga */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
-/* --- REVERSO (Diseño Negro) --- */
 .cardBack {
   background: #151515;
-  background-image: url('/cards/export/carta_back.png');
-  background-size: cover;
-  background-position: center;
+  background-image: radial-gradient(circle at center, #222, #000);
   border: 1px solid #333;
 }
 
-/* --- ANVERSO (Diseño Blanco/Contenido) --- */
 .cardFront {
-  background: #f0f0f0;
-  background-image: url('/cards/export/carta_front.png');
-  background-size: cover;
-  background-position: center;
-  transform: rotateY(180deg); /* Ya está girada para cuando se voltee */
+  background: #fdfdfd;
+  transform: rotateY(180deg);
   padding: 5px;
   text-align: center;
 }
@@ -135,8 +163,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 1px solid #ccc;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
 }
 
 .frontTitle {
@@ -156,36 +183,159 @@
   line-height: 1.2;
 }
 
-/* --- BORDES DE SELECCIÓN (Punto 4 Corregido) --- */
-/* Se aplican a .cardInner para que giren con la carta */
-
-/* P1: Borde Blanco Brillante */
+/* --- BORDES Y RESPALNDORES --- */
 .borderP1 {
-  border: 3px solid #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  border: 2px solid #fff;
+  box-shadow: 0 0 15px rgba(2, 255, 255, 0.5);
 }
 
-/* P2: Borde Dorado */
 .borderP2 {
-  border: 3px solid #ffd700;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
-/* --- ICONOS DE ESTADO --- */
-.lockIcon {
-  font-size: 2rem;
-  opacity: 0.8;
-  filter: drop-shadow(0 0 2px black);
-}
-
+/* --- ICONOS --- */
+.lockIcon,
 .checkIcon {
-  font-size: 2rem;
-  filter: drop-shadow(0 0 2px black);
-  animation: pulse 1s infinite;
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 5px black);
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+.forceReloadBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #888;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* --- DUELO RPS (NUEVO) --- */
+.rpsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.rpsTitle {
+  color: #ffd700;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+
+.rpsOptions {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.rpsOption {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rpsOption:hover {
+  border-color: #ffd700;
+  transform: scale(1.1);
+  background: #333;
+}
+
+.rpsOption.selected {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  background: #ffd70022;
+}
+
+.rpsWinnerMsg {
+  color: #ffd700;
+  font-size: 1.4rem;
+  margin-top: 1rem;
+  font-style: italic;
+  font-weight: bold;
+}
+
+/* --- FASE DE DESCARTE (NUEVO) --- */
+.protectedCard {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  filter: grayscale(0.6) brightness(0.6);
+}
+
+.protectedBadge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffd700;
+  color: #000;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.55rem;
+  font-weight: bold;
+  z-index: 50;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  text-transform: uppercase;
+}
+
+.discardedLabel {
+  position: absolute;
+  inset: 0;
+  background: rgba(128, 0, 32, 0.65);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  z-index: 60;
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.actionBtn {
+  background: #ffd700;
+  color: #000;
+  border: none;
+  padding: 0.7rem 1.8rem;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 1rem;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.actionBtn:active {
+  transform: scale(0.95);
+}
+
+.actionBtn:disabled {
+  background: #444;
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
 }

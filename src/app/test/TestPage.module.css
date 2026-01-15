@@ -1,0 +1,161 @@
+/* src/app/test/TestPage.module.css */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    background-image: radial-gradient(circle at center, #1a0505 0%, #000 100%);
+    color: #f0f0f0;
+    font-family: var(--font-primary);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.contentWrapper {
+    width: 100%;
+    max-width: 600px;
+    z-index: 2;
+    text-align: center;
+}
+
+.title {
+    font-size: 2.5rem;
+    color: #e5c07b; /* Dorado suave */
+    margin-bottom: 2rem;
+    text-shadow: 0 4px 10px rgba(229, 192, 123, 0.3);
+    animation: fadeIn 1s ease-out;
+}
+
+/* Intro Section */
+.introCard {
+    background: rgba(20, 20, 20, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid #333;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: slideUp 0.8s ease-out;
+}
+
+.introText {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #ccc;
+    margin-bottom: 2rem;
+}
+
+/* Question Section */
+.questionCard {
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid #e5c07b;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(229, 192, 123, 0.1);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.questionText {
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.optionsGrid {
+    display: grid;
+    gap: 1rem;
+}
+
+.optionButton {
+    background: transparent;
+    border: 1px solid #444;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: #ccc;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.optionButton:hover {
+    border-color: #e5c07b;
+    background: rgba(229, 192, 123, 0.05);
+    color: #e5c07b;
+    transform: translateY(-2px);
+}
+
+.optionButton:active {
+    transform: translateY(0);
+}
+
+/* Progress Bar */
+.progressContainer {
+    width: 100%;
+    height: 4px;
+    background: #222;
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, #e5c07b, #a52a2a);
+    transition: width 0.5s ease;
+}
+
+/* Buttons */
+.startButton, .skipButton {
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.startButton {
+    background: linear-gradient(135deg, #e5c07b 0%, #b8860b 100%);
+    color: #000;
+    border: none;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(229, 192, 123, 0.3);
+}
+
+.startButton:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(229, 192, 123, 0.5);
+}
+
+.skipButton {
+    background: transparent;
+    border: 1px solid #333;
+    color: #666;
+    margin-top: 2rem;
+}
+
+.skipButton:hover {
+    color: #888;
+    border-color: #555;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

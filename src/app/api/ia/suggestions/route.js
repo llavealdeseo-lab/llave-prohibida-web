@@ -5,7 +5,7 @@
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { NextResponse } from "next/server"; 
+import { NextResponse } from "next/server";
 
 export const runtime = 'edge';
 
@@ -19,34 +19,34 @@ const SuggestionSchema = z.object({
 });
 
 export async function GET(request) {
-    try {
-        const url = new URL(request.url);
-        const category = url.searchParams.get("category");
+  try {
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
 
-        if (!category) {
-            return NextResponse.json({ message: "Falta parámetro de categoría." }, { status: 400 });
-        }
-        
-        const systemPrompt = `Eres un escritor creativo y sensual que genera ejemplos de deseos para un juego de pareja llamado "Llave Prohibida". 
+    if (!category) {
+      return NextResponse.json({ message: "Falta parámetro de categoría." }, { status: 400 });
+    }
+
+    const systemPrompt = `Eres un escritor creativo y sensual que genera ejemplos de deseos para un juego de pareja llamado "Llave Prohibida". 
         El objetivo es inspirar al usuario a escribir su propio deseo en la categoría: ${category}.
         Genera exactamente 4 ejemplos de deseos. Los ejemplos deben ser directos y elegantes, con títulos cortos y descripciones claras.
         SIEMPRE debes responder únicamente con el objeto JSON que cumpla el esquema.`;
 
-        // 🎯 CAMBIO CRÍTICO: Usamos el modelo estable gemini-2.5-flash para generación rápida.
-        const { object } = await generateObject({
-            model: google("gemini-2.5-flash"),
-            schema: SuggestionSchema,
-            prompt: `Genera 4 sugerencias de deseos para la categoría ${category}.`,
-            system: systemPrompt,
-        });
+    // 🎯 CAMBIO CRÍTICO: Usamos el modelo estable gemini-1.5-flash para generación rápida.
+    const { object } = await generateObject({
+      model: google("gemini-1.5-flash"),
+      schema: SuggestionSchema,
+      prompt: `Genera 4 sugerencias de deseos para la categoría ${category}.`,
+      system: systemPrompt,
+    });
 
-        return NextResponse.json(object);
+    return NextResponse.json(object);
 
-    } catch (error) {
-        console.error("Error al generar sugerencias de IA:", error);
-        return NextResponse.json(
-            { suggestions: [] },
-            { status: 500 }
-        );
-    }
+  } catch (error) {
+    console.error("Error al generar sugerencias de IA:", error);
+    return NextResponse.json(
+      { suggestions: [] },
+      { status: 500 }
+    );
+  }
 }

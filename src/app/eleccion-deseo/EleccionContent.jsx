@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import styles from "./EleccionDeseoPage.module.css";
 import { supabase } from "@/lib/supabaseClient";
-import { iaService } from "@/services/iaService"; 
+import { iaService } from "@/services/iaService";
 
 // DEFAULTS: Sugerencias basadas en características (Físico, Emocional, Monetario)
 const DEFAULT_SUGGESTIONS = {
@@ -45,18 +45,19 @@ export default function EleccionContent() {
 
     // URL Params
     const sessionId = searchParams.get("sessionId") || searchParams.get("session");
-    const joinAs = (searchParams.get("joinAs") || searchParams.get("role") || "P1").toUpperCase(); 
+    const joinAs = (searchParams.get("joinAs") || searchParams.get("role") || "P1").toUpperCase();
     const categoryParam = (searchParams.get("category") || "PASION").toUpperCase();
 
     const [category, setCategory] = useState(categoryParam);
     const [desire, setDesire] = useState("");
-    const [status, setStatus] = useState("neutral"); 
+    const [status, setStatus] = useState("neutral");
     const [feedback, setFeedback] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [sessionExists, setSessionExists] = useState(true);
     const [isValidating, setIsValidating] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [desireScore, setDesireScore] = useState(0); // Estado para guardar el score.
+    const [desireScore, setDesireScore] = useState(0);
+    const [sessionData, setSessionData] = useState(null); // <--- NUEVO ESTADO PARA LA LÓGICA
 
     // 1. Cargar datos de la sesión y sugerencias
     useEffect(() => {
@@ -81,6 +82,7 @@ export default function EleccionContent() {
             }
 
             setSessionExists(true);
+            setSessionData(data); // <--- GUARDAR EN ESTADO
             const activeCategory = data.category.toUpperCase();
             setCategory(activeCategory);
 
@@ -92,7 +94,7 @@ export default function EleccionContent() {
                 setDesireScore(playerState.score || 0); // Cargar score existente
                 setFeedback("✅ Tu deseo ya fue guardado. Puedes modificarlo si lo deseas.");
             }
-            
+
             // B. Cargar Sugerencias de la IA/Curación DB
             let fetchedSuggestions = await iaService.getSuggestions(activeCategory);
 
@@ -117,7 +119,7 @@ export default function EleccionContent() {
         }
     }, [desire]);
 
-    const handleValidate = async () => { 
+    const handleValidate = async () => {
         const text = (desire || "").trim();
         if (!text) {
             setFeedback("Por favor, escribe un deseo antes de validar.");
@@ -129,9 +131,19 @@ export default function EleccionContent() {
         setDesireScore(0); // Reiniciar score antes de la nueva validación
 
         try {
+            // Buscamos el nombre local para personalizar el susurro
+            const myName = localStorage.getItem('userName') || (joinAs === 'P1' ? 'Jugador 1' : 'Jugador 2');
+
+            // Intentamos obtener el deseo de la pareja si ya existe en la sesión
+            const partnerName = joinAs === 'P1' ? 'p2' : 'p1';
+            const partnerDesire = sessionData?.[`${partnerName}_state`]?.desire || null;
+
+            // Obtenemos el perfil completo para la IA
+            const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+
             // 1. Validar la categoría y obtener el resultado inicial (aprobado/rechazado)
-            const result = await iaService.validateDesire(text, category);
-            
+            const result = await iaService.validateDesire(text, category, myName, partnerDesire, userProfile);
+
             let score = 0;
             let newStatus = 'REJECTED'; // Status por defecto si es rechazado
 
@@ -139,22 +151,21 @@ export default function EleccionContent() {
                 // 2. Si es APROBADO o UNDER, obtener el score (ESTO SOLUCIONA EL ERROR: "No hay score")
                 score = await iaService.getDesireScore(text);
                 setDesireScore(score); // Establecer el score en el estado
-                
+
                 // 3. Establecer el status de la UI y el feedback
                 if (result.isLowerCategory) {
                     setStatus("under");
-                    setFeedback("⚠️ Tu deseo es válido, pero podrías pedir algo más osado para aprovechar tu llave.");
                 } else {
                     setStatus("valid");
-                    setFeedback("✅ Este deseo pertenece a tu categoría. Si estás seguro/a, confírmalo.");
                 }
-                
+
+                setFeedback(result); // Guardamos el objeto completo {isApproved, isLowerCategory, message, aiWhisper}
                 newStatus = 'VALIDATED'; // Estado para guardar en la DB
 
             } else {
                 // 4. Deseo RECHAZADO
                 setStatus("invalid");
-                setFeedback(result.message || "❌ Tu deseo pertenece a una categoría superior. Prueba con otro.");
+                setFeedback(result);
                 newStatus = 'REJECTED'; // Estado para guardar en la DB
             }
 
@@ -168,8 +179,23 @@ export default function EleccionContent() {
 
         } catch (e) {
             console.error("validate error", e);
-            setFeedback("❌ Error validando el deseo. Reintenta.");
-            setStatus("invalid");
+            // Fallback: Aprobamos con un score por defecto para no bloquear el juego
+            const fallbackResult = {
+                isApproved: true,
+                isLowerCategory: false,
+                message: "Aceptado por el destino.",
+                aiWhisper: "La conexión es débil, pero mi voluntad por verte cumplir esto es fuerte."
+            };
+            setFeedback(fallbackResult);
+            setStatus("valid");
+            setDesireScore(8); // Score neutro (PASION) por defecto en caso de error
+
+            await iaService.saveDesireStatus({
+                desireTitle: text,
+                desireCategory: category,
+                score: 8,
+                newStatus: 'VALIDATED'
+            });
         } finally {
             setIsValidating(false);
         }
@@ -181,10 +207,10 @@ export default function EleccionContent() {
             if (desireScore === 0) setFeedback("❌ Error: No hay score, valida nuevamente.");
             return;
         }
-        
+
         const text = (desire || "").trim();
         if (!text) return;
-        
+
         try {
             const playerKey = joinAs === 'P1' ? 'p1_state' : 'p2_state';
 
@@ -195,7 +221,7 @@ export default function EleccionContent() {
                 score: desireScore, // Usamos el score del estado (ya validado)
                 newStatus: 'CONFIRMED'
             });
-            
+
             // 2. GUARDAR el score y deseo en la sesión de juego (game_sessions)
             const { data: currentData } = await supabase
                 .from('game_sessions')
@@ -206,13 +232,15 @@ export default function EleccionContent() {
             if (!currentData) throw new Error("No se pudo obtener el estado actual para guardar el deseo.");
 
             const currentPState = currentData[playerKey];
+            const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
 
             const updatePayload = {
                 [playerKey]: {
-                    ...currentPState, 
-                    desire: text, 
-                    desire_category: category, 
+                    ...currentPState,
+                    desire: text,
+                    desire_category: category,
                     score: desireScore, // Usamos el score del estado (ya validado)
+                    profile: userProfile // <--- GUARDAMOS EL PERFIL AQUÍ
                 }
             };
 
@@ -222,7 +250,7 @@ export default function EleccionContent() {
                 .eq('id', sessionId);
 
             if (sessionError) throw sessionError;
-            
+
             // 3. Redirección
             setFeedback("✨ Deseo confirmado. Vamos al juego de cartas...");
             router.push(`/juego-cartas?session=${sessionId}&role=${joinAs}`);
@@ -246,7 +274,7 @@ export default function EleccionContent() {
         DESEO_PROHIBIDO: styles.prohibido,
     };
     const catClass = categoryColors[category] || styles.pasion;
-    
+
     if (loading) return <div className={styles.loadingScreen}><p>Conectando con la IA...</p></div>;
     if (!sessionId) return <div className={styles.loadingScreen}><p>Error: Falta ID de sesión.</p></div>;
 
@@ -264,39 +292,45 @@ export default function EleccionContent() {
 
                 {/* --- CAMBIO A ESTÉTICA MÁS COMPACTA --- */}
                 <p className={styles.legend}>
-                    Aquí puedes probar deseos que quieres que tu pareja te cumpla. 
+                    Aquí puedes probar deseos que quieres que tu pareja te cumpla.
                     <br />
                     <span className={styles.highlight}>Yo te diré si entra en la categoría de tu llave.</span>
                 </p>
 
                 <div className={styles.inputArea}>
                     <textarea
-                        className={`${styles.textarea} ${
-                            status === "valid"
-                                ? styles.inputValid
-                                : status === "under"
+                        className={`${styles.textarea} ${status === "valid"
+                            ? styles.inputValid
+                            : status === "under"
                                 ? styles.inputUnder
                                 : status === "invalid"
-                                ? styles.inputInvalid
-                                : ""
+                                    ? styles.inputInvalid
+                                    : ""
                             }`}
                         placeholder="Escribe tu deseo..."
                         value={desire}
                         onChange={(e) => setDesire(e.target.value)}
                     />
 
+                    {/* AI WHISPER: El comentario de la IA Intermediaria */}
                     {feedback && (
-                        <p
-                            className={`${styles.feedback} ${
-                                status === "valid"
+                        <div className={styles.feedbackWrapper}>
+                            {status !== "neutral" && (
+                                <p className={styles.aiWhisper}>
+                                    <em>" {feedback.aiWhisper || 'Interesante elección...'} "</em>
+                                </p>
+                            )}
+                            <p
+                                className={`${styles.feedback} ${status === "valid"
                                     ? styles.validText
                                     : status === "under"
-                                    ? styles.underText
-                                    : styles.invalidText
-                                }`}
-                        >
-                            {feedback}
-                        </p>
+                                        ? styles.underText
+                                        : styles.invalidText
+                                    }`}
+                            >
+                                {feedback.message || feedback}
+                            </p>
+                        </div>
                     )}
 
                     <div className={styles.buttonsRow}>
@@ -311,8 +345,7 @@ export default function EleccionContent() {
 
                         <button
                             onClick={handleConfirm}
-                            className={`${styles.btn} ${styles.confirmBtn} ${
-                                status === "valid" || status === "under" ? styles.activeBtn : styles.disabledBtn
+                            className={`${styles.btn} ${styles.confirmBtn} ${status === "valid" || status === "under" ? styles.activeBtn : styles.disabledBtn
                                 }`}
                             disabled={!(status === "valid" || status === "under")}
                         >
